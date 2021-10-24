@@ -3,12 +3,14 @@ using System.Numerics;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.IO;
 using System.Globalization;
 using CGA_LW1.Models;
 using CGA_LW1.Readers;
 using CGA_LW1.Parser;
 using CGA_LW1.Algorithms;
+using CGA_LW1.Algorithms.Shaders;
+using CGA_LW1.Algorithms.Lightings;
+using System.IO;
 
 namespace CGA_LW1
 {
@@ -18,31 +20,22 @@ namespace CGA_LW1
     public partial class MainWindow : Window
     {
         private Model model;
+        private readonly CultureInfo culture = CultureInfo.InvariantCulture;
         private readonly int width, height;
 
         public MainWindow()
         {
             InitializeComponent();
-            width = (int)screenPictureBox.Width;
-            height = (int)screenPictureBox.Height;
+            width = (int)picture.Width;
+            height = (int)picture.Height;
             sbError.Message.ActionClick += (_, _) => sbError.IsActive = false;
         }
 
-        private void OpenFileButton_Click(object sender, RoutedEventArgs e)
+        private void TextureEnabled(bool flag)
         {
-            try
-            {
-                string[] fileLines = ObjFileReader.Execute();
-                model = ObjParser.Parse(fileLines);
-                model.DiffuseTexture = GetBgr24BitmapDiffuse();
-                model.NormalsTexture = GetBgr24BitmapNormals();
-                model.SpecularTexture = GetBgr24BitmapSpecular();
-            }
-            catch (Exception ex)
-            {
-                sbError.Message.Content = $"Ошибка! {ex.Message}";
-                sbError.IsActive = true;
-            }
+            diffuseCheckBox.IsEnabled = flag;
+            normalCheckBox.IsEnabled = flag;
+            mirrorCheckBox.IsEnabled = flag;
         }
 
         private static Bgr24Bitmap GetBgr24BitmapDiffuse()
@@ -96,6 +89,23 @@ namespace CGA_LW1
             }
         }
 
+        private void OpenFileButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                string[] fileLines = ObjFileReader.Execute();
+                model = ObjParser.Parse(fileLines);
+                model.DiffuseTexture = GetBgr24BitmapDiffuse();
+                model.NormalsTexture = GetBgr24BitmapNormals();
+                model.SpecularTexture = GetBgr24BitmapSpecular();
+            }
+            catch (Exception ex)
+            {
+                sbError.Message.Content = $"Ошибка! {ex.Message}";
+                sbError.IsActive = true;
+            }
+        }
+
         private void DrawButton_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -113,16 +123,14 @@ namespace CGA_LW1
 
                     if (modelMain.CheckSize(width, height))
                     {
-
-                        Color color = Color.FromRgb(byte.Parse(colorRTextBox.Text), byte.Parse(colorGTextBox.Text), byte.Parse(colorBTextBox.Text));
-                        Vector3 lighting = new(int.Parse(lightVectorXTextBox.Text), int.Parse(lightVectorYTextBox.Text), -int.Parse(lightVectorZTextBox.Text));
-
-                        if (bresenhamRadioButton.IsChecked == true)
+                        Color color = Color.FromRgb(byte.Parse(colorRTextBox.Text, culture), byte.Parse(colorGTextBox.Text, culture), byte.Parse(colorBTextBox.Text, culture));
+                        Vector3 lighting = new(int.Parse(lightVectorXTextBox.Text, culture), int.Parse(lightVectorYTextBox.Text, culture), int.Parse(lightVectorZTextBox.Text, culture));
+                        if (bresenhamRadioButton.IsChecked is true)
                         {
                             Bresenham bresenham = new(bitmap, modelMain);
                             bresenham.DrawModel(color);
                         }
-                        else if (plainShadingRadioButton.IsChecked == true)
+                        else if (planeShadingRadioButton.IsChecked is true)
                         {
                             PlaneShading shader = new(bitmap, modelMain, new LambertLighting(lighting));
                             shader.DrawModel(color);
@@ -132,33 +140,32 @@ namespace CGA_LW1
                             TextureEnabled(true);
                             // затенение фонга
                             Vector3 viewVector = new(0, 0, -1);
-                            Vector3 koefA = new(float.Parse(colorRTextBox_A.Text), float.Parse(colorGTextBox_A.Text), float.Parse(colorBTextBox_A.Text));
-                            Vector3 koefD = new(float.Parse(colorRTextBox_D.Text), float.Parse(colorGTextBox_D.Text), float.Parse(colorBTextBox_D.Text));
-                            Vector3 koefS = new(float.Parse(colorRTextBox_S.Text), float.Parse(colorGTextBox_S.Text), float.Parse(colorBTextBox_S.Text));
-                            Vector3 ambientColor = new(int.Parse(colorRTextBox_Ambient.Text), int.Parse(colorGTextBox_Ambient.Text), int.Parse(colorBTextBox_Ambient.Text));
-                            Vector3 reflectionColor = new(int.Parse(colorRTextBox_Reflection.Text), int.Parse(colorGTextBox_Reflecion.Text), int.Parse(colorBTextBox_Reflection.Text));
-                            float shiness = float.Parse(shinessBox.Text, CultureInfo.InvariantCulture);
+                            Vector3 koefA = new(float.Parse(ambientXTextBox.Text, culture), float.Parse(ambientYTextBox.Text, culture), float.Parse(ambientZTextBox.Text, culture));
+                            Vector3 koefD = new(float.Parse(diffuseXTextBox.Text, culture), float.Parse(diffuseYTextBox.Text, culture), float.Parse(diffuseZTextBox.Text, culture));
+                            Vector3 koefS = new(float.Parse(specularXTextBox.Text, culture), float.Parse(specularYTextBox.Text, culture), float.Parse(specularZTextBox.Text, culture));
+                            Vector3 ambientColor = new(int.Parse(ambientRTextBox.Text, culture), int.Parse(ambientGTextBox.Text, culture), int.Parse(ambientBTextBox.Text, culture));
+                            Vector3 reflectionColor = new(int.Parse(reflectionRTextBox.Text, culture), int.Parse(reflectionGTextBox.Text), int.Parse(reflectionBTextBox.Text));
+                            float shiness = float.Parse(shinessTextBox.Text, CultureInfo.InvariantCulture);
                             bool d = false, n = false, s = false;
-                            if (diffuseCheckBox != null && (bool)diffuseCheckBox.IsChecked)
+                            if (diffuseCheckBox is not null && (bool)diffuseCheckBox.IsChecked)
                             {
                                 d = true;
                             }
-                            if (normalCheckBox != null && (bool)normalCheckBox.IsChecked)
+                            if (normalCheckBox is not null && (bool)normalCheckBox.IsChecked)
                             {
                                 n = true;
                             }
-                            if (mirrorCheckBox != null && (bool)mirrorCheckBox.IsChecked)
+                            if (mirrorCheckBox is not null && (bool)mirrorCheckBox.IsChecked)
                             {
                                 s = true;
                             }
 
-                            /*var light = new PhongLighting(lighting, viewVector, koef_a, koef_d, koef_s, ambientColor, reflectionColor, shiness, d, n, s);
-                            var light = new LambertLighting(lighting);
-                            PhongShading shader = new PhongShading(bitmap, modelMain, light, d, n, s);
-                            shader.DrawModel(color);*/
+                            PhongLighting light = new(lighting, viewVector, koefA, koefD, koefS, ambientColor, reflectionColor, shiness, d, n, s);
+                            PhongShading shader = new(bitmap, modelMain, light, d, n, s);
+                            shader.DrawModel(color);
                         }
 
-                        screenPictureBox.Source = bitmap.Source;
+                        picture.Source = bitmap.Source;
                     }
                 }
                 else
@@ -172,13 +179,6 @@ namespace CGA_LW1
                 sbError.Message.Content = $"Ошибка! {ex.Message}";
                 sbError.IsActive = true;
             }
-        }
-
-        private void TextureEnabled(bool flag)
-        {
-            //diffuseCheckBox.IsEnabled = flag;
-            //normalCheckBox.IsEnabled = flag;
-           // mirrorCheckBox.IsEnabled = flag;
         }
 
         private ModelParams GetModelsParams()
@@ -198,7 +198,7 @@ namespace CGA_LW1
             float cameraRoll = (float)(CameraRollSlider.Value * Math.PI / 180);
             float fieldOfView = (float)(45 * Math.PI / 180);
             float aspectRatio = (float)width / height;
-            float nearPlaneDistance = 2f;
+            float nearPlaneDistance = 1f;
             float farPlaneDistance = 50f;
             int xMin = 0;
             int yMin = 0;

@@ -15,17 +15,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Algorithms\lighting\**" />
-    <Compile Remove="Algorithms\shader\**" />
-    <EmbeddedResource Remove="Algorithms\lighting\**" />
-    <EmbeddedResource Remove="Algorithms\shader\**" />
-    <None Remove="Algorithms\lighting\**" />
-    <None Remove="Algorithms\shader\**" />
-    <Page Remove="Algorithms\lighting\**" />
-    <Page Remove="Algorithms\shader\**" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="MaterialDesignThemes" Version="4.2.1" />
   </ItemGroup>
 

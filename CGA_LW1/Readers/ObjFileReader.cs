@@ -6,7 +6,7 @@ namespace CGA_LW1.Readers
 {
     public static class ObjFileReader
     {
-        private const string InitialDirectory = @"../../../objFiles";
+        private const string InitialDirectory = @"../../../objTest";
         private const string ObjFilter = "Obj files (*.obj) | *.obj";
         private static string pathFile;
 

@@ -226,7 +226,7 @@ namespace CGA_LW1.Models
             return result;
         }
 
-        public static Matrix4x4 GetViewPortMatrix(int minX, int minY, int width, int height, int x)
+        public static Matrix4x4 GetViewPortMatrix(int minX, int minY, int width, int height)
         {
             return new Matrix4x4(width / 2, 0, 0, 0,
                                  0, -1 * height / 2, 0, 0,
