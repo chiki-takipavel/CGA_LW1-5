@@ -23,18 +23,18 @@
             </Grid.ColumnDefinitions>
 
             <Image
-            x:Name="picture"
-            Grid.Column="0"
-            Margin="0 0 8 0"
-            Width="600"
-            Height="600"/>
+                x:Name="picture"
+                Grid.Column="0"
+                Margin="0 0 8 0"
+                Width="600"
+                Height="600"/>
 
             <materialDesign:Card 
-            Grid.Column="1"
-            UniformCornerRadius="8"
-            Padding="8"
-            Margin="8 0 0 0"
-            VerticalAlignment="Top">
+                Grid.Column="1"
+                UniformCornerRadius="8"
+                Padding="8"
+                Margin="8 0 0 0"
+                VerticalAlignment="Top">
 
                 <StackPanel>
                     <Grid>
