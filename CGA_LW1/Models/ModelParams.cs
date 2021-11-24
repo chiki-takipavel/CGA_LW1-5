@@ -52,7 +52,6 @@ namespace CGA_LW1.Models
             YMin = yMin;
             Height = height;
             Width = width;
-
         }
 
         public object Clone()

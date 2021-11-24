@@ -53,7 +53,15 @@ namespace CGA_LW1.Algorithms
 
         private static Matrix4x4 GetViewPortMetrix(ModelParams modelParams)
         {
-            return Matrix.GetViewPortMatrix(modelParams.XMin, modelParams.YMin, modelParams.Width, modelParams.Height);
+            return GetViewPortMatrix(modelParams.XMin, modelParams.YMin, modelParams.Width, modelParams.Height);
+        }
+
+        public static Matrix4x4 GetViewPortMatrix(int minX, int minY, int width, int height)
+        {
+            return new Matrix4x4(width / 2, 0, 0, 0,
+                                 0, -1 * height / 2, 0, 0,
+                                 0, 0, 1, 0,
+                                 minX + (width / 2), minY + (height / 2), 0, 1);
         }
 
         private static Matrix4x4 GetMVP(ModelParams modelParams)

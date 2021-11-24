@@ -16,6 +16,7 @@ namespace CGA_LW1.Models
         public Bgr24Bitmap NormalsTexture { get; set; }
         public Bgr24Bitmap DiffuseTexture { get; set; }
         public Bgr24Bitmap SpecularTexture { get; set; }
+        public Bgr24Bitmap EmissionTexture { get; set; }
 
         public Model(List<Vector4> points, List<List<Vector3>> faces, List<Vector3> texture, List<Vector3> normal, List<List<Vector3>> triangleFaces)
         {
@@ -70,6 +71,7 @@ namespace CGA_LW1.Models
             obj.DiffuseTexture = DiffuseTexture;
             obj.NormalsTexture = NormalsTexture;
             obj.SpecularTexture = SpecularTexture;
+            obj.EmissionTexture = EmissionTexture;
 
             return obj;
         }

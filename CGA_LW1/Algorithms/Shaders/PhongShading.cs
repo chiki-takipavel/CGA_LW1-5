@@ -3,6 +3,7 @@ using CGA_LW1.Models;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Threading.Tasks;
 using System.Windows.Media;
 
 namespace CGA_LW1.Algorithms.Shaders
@@ -10,11 +11,46 @@ namespace CGA_LW1.Algorithms.Shaders
     public class PhongShading : PlaneShading
     {
         private readonly bool texturesEnabled;
+        private readonly bool bloom;
+        private readonly double sigma;
+        private readonly double exposure;
+        private readonly Color[] bloomColors;
+        private readonly Vector3 brightnessVector = new(0.2126f, 0.7152f, 0.0722f);
 
-        public PhongShading(Bgr24Bitmap bitmap, Model model, ILighting lighting, bool d, bool n, bool s)
+        public PhongShading(Bgr24Bitmap bitmap, Model model, ILighting lighting, bool d, bool n, bool s, bool e, bool bloom, double sigma, double exposure)
            : base(bitmap, model, lighting)
         {
-            texturesEnabled = d || n || s;
+            this.bloom = bloom;
+            texturesEnabled = d || n || s || e;
+            this.sigma = sigma;
+            this.exposure = exposure;
+            bloomColors = new Color[bitmap.PixelWidth * bitmap.PixelHeight];
+        }
+
+        public override void DrawModel()
+        {
+            base.DrawModel();
+            GaussianSuperFastBlur gaussianSuperFastBlur = new(bloomColors, Bitmap.PixelWidth, Bitmap.PixelHeight);
+            Color[] gaussianColors = gaussianSuperFastBlur.Process(sigma);
+
+            if (bloom)
+            {
+                Parallel.For(0, Bitmap.PixelHeight, y =>
+                {
+                    for (int x = 0; x < Bitmap.PixelWidth; x++)
+                    {
+                        Color bitmapColor = Bitmap[x, y];
+                        Color gaussianColor = gaussianColors[x + y * Bitmap.PixelWidth];
+                        Vector4 bitmapVector = new(bitmapColor.ScA, bitmapColor.ScR, bitmapColor.ScG, bitmapColor.ScB);
+                        Vector4 gaussianVector = new(gaussianColor.ScA, gaussianColor.ScR, gaussianColor.ScG, gaussianColor.ScB);
+                        bitmapVector += gaussianVector;
+                        bitmapVector.Y = (float)(1f - Math.Exp(-bitmapVector.Y * exposure));
+                        bitmapVector.Z = (float)(1f - Math.Exp(-bitmapVector.Z * exposure));
+                        bitmapVector.W = (float)(1f - Math.Exp(-bitmapVector.W * exposure));
+                        Bitmap[x, y] = Color.FromScRgb(bitmapVector.X, bitmapVector.Y, bitmapVector.Z, bitmapVector.W);
+                    }
+                });
+            }
         }
 
         // Отрисовывание ребра
@@ -142,6 +178,8 @@ namespace CGA_LW1.Algorithms.Shaders
         protected virtual void DrawPixel(int x, int y, float z, float nw, Vector3 normal, Vector3 texel, Color color, List<Pixel> sidesPixels = null)
         {
             Color pixelColor = texturesEnabled ? Lighting.GetPointColor(Model, texel / nw, normal / nw) : Lighting.GetPointColor(normal, color);
+            Vector3 pixelVector = new Vector3(pixelColor.ScR, pixelColor.ScG, pixelColor.ScB);
+            float brightness = Vector3.Dot(pixelVector, brightnessVector);
 
             sidesPixels.Add(new Pixel(x, y, z, nw, pixelColor, normal, texel));   // добавляеи точку в список граничных точек грани
 
@@ -149,8 +187,17 @@ namespace CGA_LW1.Algorithms.Shaders
                 y > 0 && y < Bitmap.PixelHeight &&
                 z > 0 && z < 1 && z <= ZBuffer[x, y])
             {
-                ZBuffer[x, y] = z;                            // помечаем новую координату в z-буффере
-                Bitmap[x, y] = pixelColor;                    // красим пиксель
+                if (brightness > 1f)
+                {
+                    bloomColors[x + Bitmap.PixelWidth * y] = pixelColor;
+                }
+                else 
+                {
+                    bloomColors[x + Bitmap.PixelWidth * y] = Color.FromScRgb(0f, 0f, 0f, 0f);
+                }
+
+                ZBuffer[x, y] = z;
+                Bitmap[x, y] = pixelColor;
             }
         }
 
@@ -163,7 +210,7 @@ namespace CGA_LW1.Algorithms.Shaders
                 return;
             }
 
-            for (int y = (int)minY; y < maxY; y++)      // по очереди отрисовываем линии для каждой y-координаты
+            for (int y = (int)minY; y < maxY; y++)
             {
                 (Pixel? startPixel, Pixel? endPixel) = GetStartEndXForY(sidesPixels, y);
                 if (startPixel is null || endPixel is null)
@@ -174,8 +221,8 @@ namespace CGA_LW1.Algorithms.Shaders
                 Pixel start = (Pixel)startPixel;
                 Pixel end = (Pixel)endPixel;
 
-                float z = start.Z;                                       // в какую сторону приращение z
-                float dz = (end.Z - start.Z) / Math.Abs((float)(end.X - start.X));  // z += dz при изменении x
+                float z = start.Z;                                       
+                float dz = (end.Z - start.Z) / Math.Abs((float)(end.X - start.X));  
 
                 Vector3 deltaNormal = (end.Normal - start.Normal) / (end.X - start.X);
                 Vector3 curNormal = start.Normal;
@@ -186,19 +233,30 @@ namespace CGA_LW1.Algorithms.Shaders
                 float deltaNW = (end.NW - start.NW) / (end.X - start.X);
                 float curNW = start.NW;
 
-                // отрисовываем линию
                 for (int x = start.X; x < end.X; x++, z += dz)
                 {
                     curNormal += deltaNormal;
                     curTexel += deltaTexel;
                     curNW += deltaNW;
 
-                    if ((x > 0) && (x < ZBuffer.Width) &&           // x попал в область экрана
-                        (y > 0) && (y < ZBuffer.Height) &&          // y попал в область экрана
-                        (z <= ZBuffer[x, y]) && z > 0 && z < 1)     // z координата отображаемая
+                    if ((x > 0) && (x < ZBuffer.Width) &&           
+                        (y > 0) && (y < ZBuffer.Height) &&          
+                        (z <= ZBuffer[x, y]) && z > 0 && z < 1)     
                     {
+                        var pixelColor = texturesEnabled ? Lighting.GetPointColor(Model, curTexel / curNW, curNormal / curNW) : Lighting.GetPointColor(curNormal, Color);
+                        Vector3 pixelVector = new Vector3(pixelColor.ScR, pixelColor.ScG, pixelColor.ScB);
+                        float brightness = Vector3.Dot(pixelVector, brightnessVector);
+                        if (brightness > 1f)
+                        {
+                            bloomColors[x + Bitmap.PixelWidth * y] = pixelColor;
+                        }
+                        else
+                        {
+                            bloomColors[x + Bitmap.PixelWidth * y] = Color.FromScRgb(0f, 0f, 0f, 0f);
+                        }
+
                         ZBuffer[x, y] = z;
-                        Bitmap[x, y] = texturesEnabled ? Lighting.GetPointColor(Model, curTexel / curNW, curNormal / curNW) : Lighting.GetPointColor(curNormal, Color);
+                        Bitmap[x, y] = pixelColor;
                     }
                 }
             }

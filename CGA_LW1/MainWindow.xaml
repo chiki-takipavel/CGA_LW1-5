@@ -22,12 +22,14 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <Image
-                x:Name="picture"
+            <Grid
+                x:Name="gridPicture"
                 Grid.Column="0"
-                Margin="0 0 8 0"
-                Width="600"
-                Height="600"/>
+                Margin="0 0 8 0">
+                <Image
+                    x:Name="picture">
+                </Image>
+            </Grid>
 
             <materialDesign:Card 
                 Grid.Column="1"
@@ -82,11 +84,12 @@
                             Margin="4"/>
                         <Slider 
                             x:Name="scaleSlider" 
-                            Minimum="1" 
+                            Minimum="0.1" 
                             Maximum="3" 
-                            Value="1"
+                            Value="0.1"
                             SmallChange="0.1"
                             AutoToolTipPlacement="TopLeft" 
+                            AutoToolTipPrecision="1"
                             Thumb.DragDelta="DrawButton_Click" 
                             Grid.Column="1"
                             Grid.Row="1"
@@ -185,8 +188,8 @@
                             Margin="4"/>
                         <Slider 
                             x:Name="translationZSlider"
-                            Minimum="-20"
-                            Maximum="20"
+                            Minimum="-50"
+                            Maximum="50"
                             SmallChange="5"
                             AutoToolTipPlacement="TopLeft"
                             Thumb.DragDelta="DrawButton_Click" 
@@ -233,7 +236,7 @@
                             x:Name="CameraPositionZSlider"
                             Value="10" 
                             Minimum="5"
-                            Maximum="30"
+                            Maximum="32"
                             SmallChange="5"
                             AutoToolTipPlacement="TopLeft"
                             Thumb.DragDelta="DrawButton_Click"
@@ -297,34 +300,25 @@
                             Grid.Row="8"
                             Margin="4"/>
 
-                        <GroupBox 
-                            x:Name="shadingTypesGroupBox"
-                            Header="Shading"
+
+                        <StackPanel
                             Grid.Row="10" 
                             Grid.ColumnSpan="2" 
                             Grid.Column="0"
-                            Style="{StaticResource MaterialDesignCardGroupBox}"
                             Margin="4">
-                            <StackPanel>
-                                <RadioButton x:Name="bresenhamRadioButton" IsChecked="True" Content="Bresenham" Click="DrawButton_Click"/>
-                                <RadioButton x:Name="planeShadingRadioButton" Content="Plane Shading" Click="DrawButton_Click"/>
-                                <RadioButton x:Name="phongShadingRadioButton" Content="Phong Shading" Click="DrawButton_Click"/>
-                            </StackPanel>
-                        </GroupBox>
-                        <GroupBox 
-                            x:Name="textureTypesGroupBox"
-                            Header="Textures"
+                            <RadioButton x:Name="bresenhamRadioButton" IsChecked="True" Content="Bresenham" Click="DrawButton_Click"/>
+                            <RadioButton x:Name="planeShadingRadioButton" Content="Plane Shading" Click="DrawButton_Click"/>
+                            <RadioButton x:Name="phongShadingRadioButton" Content="Phong Shading" Click="DrawButton_Click"/>
+                        </StackPanel>
+                        <StackPanel
                             Grid.Row="10" 
                             Grid.ColumnSpan="2" 
                             Grid.Column="2"
-                            Style="{StaticResource MaterialDesignCardGroupBox}"
                             Margin="4">
-                            <StackPanel>
-                                <CheckBox x:Name="diffuseCheckBox" IsEnabled="False" Content="Albedo" Click="DrawButton_Click"/>
-                                <CheckBox x:Name="normalCheckBox" IsEnabled="False" Content="Normal" Click="DrawButton_Click"/>
-                                <CheckBox x:Name="mirrorCheckBox" IsEnabled="False" Content="Specular" Click="DrawButton_Click"/>
-                            </StackPanel>
-                        </GroupBox>
+                            <CheckBox x:Name="texturesCheckBox" IsEnabled="False" Content="Textures" Click="DrawButton_Click"/>
+                            <CheckBox x:Name="normalsCheckBox" IsEnabled="False" Content="Normal Map" Click="DrawButton_Click"/>
+                            <CheckBox x:Name="bloomCheckBox" IsEnabled="False" Content="Bloom" Click="DrawButton_Click"/>
+                        </StackPanel>
                     </Grid>
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -339,7 +333,9 @@
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="16"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
@@ -430,119 +426,102 @@
                             x:Name="ambientXTextBox" 
                             Text="0.2" 
                             Grid.Column="2" 
-                            Grid.Row="3"
-                            Margin="4"/>
-                        <Label 
-                            Content="X"
-                            Grid.Column="1" 
-                            Grid.Row="3"
+                            Grid.Row="2"
                             Margin="4"/>
                         <TextBox 
                             x:Name="ambientYTextBox"
                             Text="0.2"
                             Grid.Column="4" 
-                            Grid.Row="3"
-                            Margin="4"/>
-                        <Label 
-                            Content="Y" 
-                            Grid.Column="3" 
-                            Grid.Row="3"
+                            Grid.Row="2"
                             Margin="4"/>
                         <TextBox 
                             x:Name="ambientZTextBox"
                             Text="0.2"
                             Grid.Column="6"
-                            Grid.Row="3"
+                            Grid.Row="2"
                             Margin="4"/>
                         <Label 
-                            Content="Z" 
-                            Grid.Column="5" 
-                            Grid.Row="3"
-                            Margin="4"/>
-                        <Label 
-                            Content="Ambient" 
+                            Content="Ambient Coefficient" 
                             Grid.Column="0"
-                            Grid.Row="3"
+                            Grid.ColumnSpan="2"
+                            Grid.Row="2"
                             Margin="4"/>
 
                         <TextBox 
                             x:Name="diffuseXTextBox"
                             Text="1.0"
                             Grid.Column="2"
-                            Grid.Row="4"
-                            Margin="4"/>
-                        <Label 
-                            Content="X"
-                            Grid.Column="1"
-                            Grid.Row="4" 
+                            Grid.Row="3"
                             Margin="4"/>
                         <TextBox 
                             x:Name="diffuseYTextBox"
                             Text="1.0"
                             Grid.Column="4"
-                            Grid.Row="4"
-                            Margin="4"/>
-                        <Label 
-                            Content="Y"
-                            Grid.Column="3" 
-                            Grid.Row="4"
+                            Grid.Row="3"
                             Margin="4"/>
                         <TextBox 
                             x:Name="diffuseZTextBox"
                             Text="1.0"
                             Grid.Column="6"
-                            Grid.Row="4"
+                            Grid.Row="3"
                             Margin="4"/>
                         <Label 
-                            Content="Z"
-                            Grid.Column="5"
-                            Grid.Row="4"
-                            Margin="4"/>
-                        <Label 
-                            Content="Diffuse"
+                            Content="Diffuse Coefficient"
                             Grid.Column="0"
-                            Grid.Row="4"
+                            Grid.ColumnSpan="2"
+                            Grid.Row="3"
                             Margin="4"/>
 
                         <TextBox 
                             x:Name="specularXTextBox"
-                            Text="0.7"
+                            Text="1.0"
                             Grid.Column="2" 
-                            Grid.Row="5"
-                            Margin="4"/>
-                        <Label 
-                            Content="X"
-                            Grid.Column="1"
-                            Grid.Row="5"
+                            Grid.Row="4"
                             Margin="4"/>
                         <TextBox 
                             x:Name="specularYTextBox"
-                            Text="0.7"
+                            Text="1.0"
                             Grid.Column="4"
-                            Grid.Row="5"
-                            Margin="4"/>
-                        <Label 
-                            Content="Y"
-                            Grid.Column="3"
-                            Grid.Row="5"
+                            Grid.Row="4"
                             Margin="4"/>
                         <TextBox 
                             x:Name="specularZTextBox"
-                            Text="0.7"
+                            Text="1.0"
+                            Grid.Column="6"
+                            Grid.Row="4"
+                            Margin="4"/>
+                        <Label 
+                            Content="Specular Coefficient"
+                            Grid.Column="0"
+                            Grid.ColumnSpan="2"
+                            Grid.Row="4"
+                            Margin="4"/>
+
+                        <TextBox 
+                            x:Name="emissionXTextBox"
+                            Text="8.0"
+                            Grid.Column="2" 
+                            Grid.Row="5"
+                            Margin="4"/>
+                        <TextBox 
+                            x:Name="emissionYTextBox"
+                            Text="8.0"
+                            Grid.Column="4"
+                            Grid.Row="5"
+                            Margin="4"/>
+                        <TextBox 
+                            x:Name="emissionZTextBox"
+                            Text="8.0"
                             Grid.Column="6"
                             Grid.Row="5"
                             Margin="4"/>
                         <Label 
-                            Content="Z" 
-                            Grid.Column="5" 
-                            Grid.Row="5" 
-                            Margin="4"/>
-                        <Label 
-                            Content="Specular"
+                            Content="Emission Coefficient"
                             Grid.Column="0"
+                            Grid.ColumnSpan="2"
                             Grid.Row="5"
                             Margin="4"/>
-
+                        
                         <TextBox 
                             x:Name="ambientRTextBox" 
                             Text="255"
@@ -556,7 +535,7 @@
                             Margin="4"/>
                         <TextBox 
                             x:Name="ambientGTextBox"
-                            Text="0" 
+                            Text="255" 
                             Grid.Column="4" 
                             Grid.Row="6"
                             Margin="4"/>
@@ -625,13 +604,42 @@
                             Content="Shiness" 
                             HorizontalAlignment="Left" 
                             Grid.Column="0"
+                            Grid.ColumnSpan="2"
                             Grid.Row="8" 
                             Margin="4"/>
                         <TextBox 
                             x:Name="shinessTextBox" 
-                            Text="30.0" 
+                            Text="32.0" 
                             Grid.Column="2"
                             Grid.Row="8"
+                            Margin="4"/>
+
+                        <Label 
+                            Content="Exposure" 
+                            HorizontalAlignment="Left" 
+                            Grid.Column="3"
+                            Grid.ColumnSpan="2"
+                            Grid.Row="8" 
+                            Margin="4"/>
+                        <TextBox 
+                            x:Name="exposureTextBox" 
+                            Text="0.1" 
+                            Grid.Column="6"
+                            Grid.Row="8"
+                            Margin="4"/>
+                        
+                        <Label 
+                            Content="Gauss Blur Sigma" 
+                            HorizontalAlignment="Left" 
+                            Grid.Column="0"
+                            Grid.ColumnSpan="2"
+                            Grid.Row="9" 
+                            Margin="4"/>
+                        <TextBox 
+                            x:Name="sigmaTextBox" 
+                            Text="10.0" 
+                            Grid.Column="2"
+                            Grid.Row="9"
                             Margin="4"/>
                     </Grid>
                 </StackPanel>

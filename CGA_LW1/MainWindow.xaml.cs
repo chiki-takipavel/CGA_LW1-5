@@ -21,21 +21,12 @@ namespace CGA_LW1
     {
         private Model model;
         private readonly CultureInfo culture = CultureInfo.InvariantCulture;
-        private readonly int width, height;
+        private int width, height;
 
         public MainWindow()
         {
             InitializeComponent();
-            width = (int)picture.Width;
-            height = (int)picture.Height;
             sbError.Message.ActionClick += (_, _) => sbError.IsActive = false;
-        }
-
-        private void TextureEnabled(bool flag)
-        {
-            diffuseCheckBox.IsEnabled = flag;
-            normalCheckBox.IsEnabled = flag;
-            mirrorCheckBox.IsEnabled = flag;
         }
 
         private static Bgr24Bitmap GetBgr24BitmapDiffuse()
@@ -89,6 +80,23 @@ namespace CGA_LW1
             }
         }
 
+        private static Bgr24Bitmap GetBgr24BitmapEmission()
+        {
+            string path = ObjFileReader.GetEmissionPath();
+
+            if (File.Exists(path))
+            {
+                BitmapImage imgEmission = new(new Uri(path, UriKind.Relative));
+                imgEmission.CreateOptions = BitmapCreateOptions.None;
+                WriteableBitmap initialWriteableBitmapEmission = new(imgEmission);
+                return new Bgr24Bitmap(initialWriteableBitmapEmission);
+            }
+            else
+            {
+                throw new FileNotFoundException();
+            }
+        }
+
         private void OpenFileButton_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -98,6 +106,7 @@ namespace CGA_LW1
                 model.DiffuseTexture = GetBgr24BitmapDiffuse();
                 model.NormalsTexture = GetBgr24BitmapNormals();
                 model.SpecularTexture = GetBgr24BitmapSpecular();
+                model.EmissionTexture = GetBgr24BitmapEmission();
             }
             catch (Exception ex)
             {
@@ -110,9 +119,13 @@ namespace CGA_LW1
         {
             try
             {
-                TextureEnabled(false);
+                texturesCheckBox.IsEnabled = false;
+                normalsCheckBox.IsEnabled = false;
+                bloomCheckBox.IsEnabled = false;
                 if (model is not null)
                 {
+                    width = (int)gridPicture.ActualWidth;
+                    height = (int)gridPicture.ActualHeight;
                     WriteableBitmap source = new(width, height, 96, 96, PixelFormats.Bgra32, null);
                     Bgr24Bitmap bitmap = new(source);
 
@@ -137,31 +150,40 @@ namespace CGA_LW1
                         }
                         else if (phongShadingRadioButton.IsChecked == true)
                         {
-                            TextureEnabled(true);
+                            texturesCheckBox.IsEnabled = true;
+                            normalsCheckBox.IsEnabled = true;
+                            bloomCheckBox.IsEnabled = true;
                             // затенение фонга
-                            Vector3 viewVector = new(0, 0, -1);
+                            Vector3 viewVector = Vector3.Normalize(new Vector3(0, 0, 0) - new Vector3(modelParams.CameraPositionX, modelParams.CameraPositionY, modelParams.CameraPositionZ));
                             Vector3 koefA = new(float.Parse(ambientXTextBox.Text, culture), float.Parse(ambientYTextBox.Text, culture), float.Parse(ambientZTextBox.Text, culture));
                             Vector3 koefD = new(float.Parse(diffuseXTextBox.Text, culture), float.Parse(diffuseYTextBox.Text, culture), float.Parse(diffuseZTextBox.Text, culture));
                             Vector3 koefS = new(float.Parse(specularXTextBox.Text, culture), float.Parse(specularYTextBox.Text, culture), float.Parse(specularZTextBox.Text, culture));
+                            Vector3 koefE = new(float.Parse(emissionXTextBox.Text, culture), float.Parse(emissionYTextBox.Text, culture), float.Parse(emissionZTextBox.Text, culture));
                             Vector3 ambientColor = new(int.Parse(ambientRTextBox.Text, culture), int.Parse(ambientGTextBox.Text, culture), int.Parse(ambientBTextBox.Text, culture));
                             Vector3 reflectionColor = new(int.Parse(reflectionRTextBox.Text, culture), int.Parse(reflectionGTextBox.Text), int.Parse(reflectionBTextBox.Text));
                             float shiness = float.Parse(shinessTextBox.Text, CultureInfo.InvariantCulture);
-                            bool d = false, n = false, s = false;
-                            if (diffuseCheckBox is not null && (bool)diffuseCheckBox.IsChecked)
-                            {
-                                d = true;
-                            }
-                            if (normalCheckBox is not null && (bool)normalCheckBox.IsChecked)
+                            float sigma = float.Parse(sigmaTextBox.Text, CultureInfo.InvariantCulture);
+                            float exposure = float.Parse(exposureTextBox.Text, CultureInfo.InvariantCulture);
+                            bool d = false, n = false, s = false, em = false;
+                            if (normalsCheckBox is not null && (bool)normalsCheckBox.IsChecked)
                             {
                                 n = true;
                             }
-                            if (mirrorCheckBox is not null && (bool)mirrorCheckBox.IsChecked)
+                            if (texturesCheckBox is not null && (bool)texturesCheckBox.IsChecked)
                             {
+                                d = true;
                                 s = true;
+                                em = true;
                             }
 
-                            PhongLighting light = new(lighting, viewVector, koefA, koefD, koefS, ambientColor, reflectionColor, shiness, d, n, s);
-                            PhongShading shader = new(bitmap, modelMain, light, d, n, s);
+                            bool bloom = false;
+                            if (bloomCheckBox is not null && (bool)bloomCheckBox.IsChecked)
+                            {
+                                bloom = true;
+                            }
+
+                            PhongLighting light = new(lighting, viewVector, koefA, koefD, koefS, koefE, ambientColor, reflectionColor, shiness, d, n, s, em);
+                            PhongShading shader = new(bitmap, modelMain, light, d, n, s, em, bloom, sigma, exposure);
                             shader.DrawModel(color);
                         }
 
@@ -196,10 +218,10 @@ namespace CGA_LW1
             float cameraYaw = (float)(CameraYawSlider.Value * Math.PI / 180);
             float cameraPitch = (float)(CameraPitchSlider.Value * Math.PI / 180);
             float cameraRoll = (float)(CameraRollSlider.Value * Math.PI / 180);
-            float fieldOfView = (float)(45 * Math.PI / 180);
+            float fieldOfView = (float)(60 * Math.PI / 180);
             float aspectRatio = (float)width / height;
-            float nearPlaneDistance = 1f;
-            float farPlaneDistance = 50f;
+            float nearPlaneDistance = 0.1f;
+            float farPlaneDistance = 100f;
             int xMin = 0;
             int yMin = 0;
 
