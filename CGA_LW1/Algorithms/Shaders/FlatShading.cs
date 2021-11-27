@@ -9,12 +9,12 @@ using System.Windows.Media;
 
 namespace CGA_LW1.Algorithms.Shaders
 {
-    public class PlaneShading : Bresenham
+    public class FlatShading : Bresenham
     {
         protected ZBuffer ZBuffer { get; set; }
         protected ILighting Lighting { get; set; }
 
-        public PlaneShading(Bgr24Bitmap bitmap, Model model, ILighting lighting)
+        public FlatShading(Bgr24Bitmap bitmap, Model model, ILighting lighting)
             : base(bitmap, model)
         {
             Lighting = lighting;

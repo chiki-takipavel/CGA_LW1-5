@@ -8,7 +8,7 @@ using System.Windows.Media;
 
 namespace CGA_LW1.Algorithms.Shaders
 {
-    public class PhongShading : PlaneShading
+    public class PhongShading : FlatShading
     {
         private readonly bool texturesEnabled;
         private readonly bool bloom;
@@ -178,7 +178,7 @@ namespace CGA_LW1.Algorithms.Shaders
         protected virtual void DrawPixel(int x, int y, float z, float nw, Vector3 normal, Vector3 texel, Color color, List<Pixel> sidesPixels = null)
         {
             Color pixelColor = texturesEnabled ? Lighting.GetPointColor(Model, texel / nw, normal / nw) : Lighting.GetPointColor(normal, color);
-            Vector3 pixelVector = new Vector3(pixelColor.ScR, pixelColor.ScG, pixelColor.ScB);
+            Vector3 pixelVector = new(pixelColor.ScR, pixelColor.ScG, pixelColor.ScB);
             float brightness = Vector3.Dot(pixelVector, brightnessVector);
 
             sidesPixels.Add(new Pixel(x, y, z, nw, pixelColor, normal, texel));   // добавляеи точку в список граничных точек грани
@@ -191,7 +191,7 @@ namespace CGA_LW1.Algorithms.Shaders
                 {
                     bloomColors[x + Bitmap.PixelWidth * y] = pixelColor;
                 }
-                else 
+                else
                 {
                     bloomColors[x + Bitmap.PixelWidth * y] = Color.FromScRgb(0f, 0f, 0f, 0f);
                 }
@@ -221,8 +221,8 @@ namespace CGA_LW1.Algorithms.Shaders
                 Pixel start = (Pixel)startPixel;
                 Pixel end = (Pixel)endPixel;
 
-                float z = start.Z;                                       
-                float dz = (end.Z - start.Z) / Math.Abs((float)(end.X - start.X));  
+                float z = start.Z;
+                float dz = (end.Z - start.Z) / Math.Abs((float)(end.X - start.X));
 
                 Vector3 deltaNormal = (end.Normal - start.Normal) / (end.X - start.X);
                 Vector3 curNormal = start.Normal;
@@ -239,12 +239,12 @@ namespace CGA_LW1.Algorithms.Shaders
                     curTexel += deltaTexel;
                     curNW += deltaNW;
 
-                    if ((x > 0) && (x < ZBuffer.Width) &&           
-                        (y > 0) && (y < ZBuffer.Height) &&          
-                        (z <= ZBuffer[x, y]) && z > 0 && z < 1)     
+                    if ((x > 0) && (x < ZBuffer.Width) &&
+                        (y > 0) && (y < ZBuffer.Height) &&
+                        (z <= ZBuffer[x, y]) && z > 0 && z < 1)
                     {
                         var pixelColor = texturesEnabled ? Lighting.GetPointColor(Model, curTexel / curNW, curNormal / curNW) : Lighting.GetPointColor(curNormal, Color);
-                        Vector3 pixelVector = new Vector3(pixelColor.ScR, pixelColor.ScG, pixelColor.ScB);
+                        Vector3 pixelVector = new(pixelColor.ScR, pixelColor.ScG, pixelColor.ScB);
                         float brightness = Vector3.Dot(pixelVector, brightnessVector);
                         if (brightness > 1f)
                         {

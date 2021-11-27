@@ -34,22 +34,22 @@ namespace CGA_LW1.Readers
 
         public static string GetDiffusePath()
         {
-            return $@"{pathFile.Substring(0, pathFile.LastIndexOf(@"\"))}\Diffuse.png";
+            return $@"{pathFile[..pathFile.LastIndexOf(@"\")]}\Diffuse.png";
         }
 
         public static string GetNormalsPath()
         {
-            return $@"{pathFile.Substring(0, pathFile.LastIndexOf(@"\"))}\Normal.png";
+            return $@"{pathFile[..pathFile.LastIndexOf(@"\")]}\Normal.png";
         }
 
         public static string GetSpecularPath()
         {
-            return $@"{pathFile.Substring(0, pathFile.LastIndexOf(@"\"))}\Specular.png";
+            return $@"{pathFile[..pathFile.LastIndexOf(@"\")]}\Specular.png";
         }
 
         public static string GetEmissionPath()
         {
-            return $@"{pathFile.Substring(0, pathFile.LastIndexOf(@"\"))}\Emission.png";
+            return $@"{pathFile[..pathFile.LastIndexOf(@"\")]}\Emission.png";
         }
     }
 }

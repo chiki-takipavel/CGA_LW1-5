@@ -64,7 +64,7 @@ namespace CGA_LW1.Algorithms.Lightings
         // Refactor
         public Color GetPointColor(Model model, Vector3 texel, Vector3 argNormal)
         {
-            if (model.DiffuseTexture is null)
+            if (model.DiffuseTexture is null || !d)
             {
                 return Color.FromScRgb(0f, 0f, 0f, 0f);
             }
@@ -98,11 +98,11 @@ namespace CGA_LW1.Algorithms.Lightings
             // вектор отраженного луча света
             Vector3 reflectionVector = Vector3.Normalize(Vector3.Reflect(lightVector, normal));
             // зеркальное освещение
-            Vector3 iS = (model.SpecularTexture == null || !s) ? new Vector3(0) :
+            Vector3 iS = (model.SpecularTexture is null || !s) ? new Vector3(0) :
                             model.SpecularTexture.GetRGBVector((int)(x + 0.5f), (int)(y + 0.5f)) *
                             (float)Math.Pow(Math.Max(0, Vector3.Dot(viewVector, reflectionVector)), shiness);
 
-            Vector3 iE = (model.EmissionTexture == null || !e) ? new Vector3(0) :
+            Vector3 iE = (model.EmissionTexture is null || !e) ? new Vector3(0) :
                             model.EmissionTexture.GetRGBVector((int)(x + 0.5f), (int)(y + 0.5f)) * koefE;
 
             // совмещение компонентов освещения

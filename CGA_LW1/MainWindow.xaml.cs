@@ -143,9 +143,9 @@ namespace CGA_LW1
                             Bresenham bresenham = new(bitmap, modelMain);
                             bresenham.DrawModel(color);
                         }
-                        else if (planeShadingRadioButton.IsChecked is true)
+                        else if (flatShadingRadioButton.IsChecked is true)
                         {
-                            PlaneShading shader = new(bitmap, modelMain, new LambertLighting(lighting));
+                            FlatShading shader = new(bitmap, modelMain, new LambertLighting(lighting));
                             shader.DrawModel(color);
                         }
                         else if (phongShadingRadioButton.IsChecked == true)

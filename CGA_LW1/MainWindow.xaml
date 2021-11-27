@@ -307,7 +307,7 @@
                             Grid.Column="0"
                             Margin="4">
                             <RadioButton x:Name="bresenhamRadioButton" IsChecked="True" Content="Bresenham" Click="DrawButton_Click"/>
-                            <RadioButton x:Name="planeShadingRadioButton" Content="Plane Shading" Click="DrawButton_Click"/>
+                            <RadioButton x:Name="flatShadingRadioButton" Content="Flat Shading" Click="DrawButton_Click"/>
                             <RadioButton x:Name="phongShadingRadioButton" Content="Phong Shading" Click="DrawButton_Click"/>
                         </StackPanel>
                         <StackPanel
